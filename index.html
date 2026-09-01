@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle</title>
+<style>
+body{font-family:Arial;background:#e8f5e9;margin:0;padding:10px}
+.box{max-width:800px;margin:auto;background:white;padding:20px;border-radius:10px}
+h1{text-align:center;color:#2e7d32}
+.topo{display:flex;gap:10px}
+.cartao{flex:1;padding:10px;border-radius:8px;color:white;text-align:center}
+.verde{background:#2e7d32}.azul{background:#1976d2}.vermelho{background:#d32f2f}
+.linha{display:flex;gap:5px;margin:10px 0}
+input{padding:10px;flex:1;border:1px solid #ccc;border-radius:5px}
+button{padding:10px;border:none;border-radius:5px;color:white;cursor:pointer;background:#2e7d32}
+.btn-multa{background:#ff9800}.btn-pago{background:#1976d2}.btn-del{background:#d32f2f}
+table{width:100%;border-collapse:collapse;margin-top:15px}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;font-size:14px}
+th{background:#f1f1f1}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>Controle de Mensalidades</h1>
+<div class="topo">
+<div class="cartao verde"><b>ARRECADAR</b><div id="txtTotal">R$ 0</div></div>
+<div class="cartao azul"><b>PAGO</b><div id="txtPago">R$ 0</div></div>
+<div class="cartao vermelho"><b>FALTA</b><div id="txtFalta">R$ 0</div></div>
+</div>
+<div class="linha">
+<input type="number" id="valorBase" value="50">
+<input type="number" id="valorMultaBase" value="5">
+<button onclick="salvarValores()">Salvar</button>
+</div>
+<div class="linha">
+<input type="text" id="nome" placeholder="Nome do aluno">
+<button onclick="addAluno()">+ Adicionar</button>
+</div>
+<table><thead><tr><th>Nome</th><th>Base</th><th>Multa</th><th>Total</th><th>Ações</th></tr></thead><tbody id="tabela"></tbody></table>
+</div>
+<script>
+let alunos=JSON.parse(localStorage.getItem("meus_alunos")||"[]");
+let valorBase=Number(localStorage.getItem("valorBase")||50);
+let valorMulta=Number(localStorage.getItem("valorMulta")||5);
+document.getElementById("valorBase").value=valorBase;
+document.getElementById("valorMultaBase").value=valorMulta;
+function salvarValores(){valorBase=Number(document.getElementById("valorBase").value);valorMulta=Number(document.getElementById("valorMultaBase").value);localStorage.setItem("valorBase",valorBase);localStorage.setItem("valorMulta",valorMulta);desenhar();}
+function addAluno(){let nome=document.getElementById("nome").value;if(nome.trim()===""){alert("Digite nome");return;}alunos.push({id:Date.now(),nome:nome,multa:0,pago:false});localStorage.setItem("meus_alunos",JSON.stringify(alunos));document.getElementById("nome").value="";desenhar();}
+function porMulta(id){let a=alunos.find(x=>x.id===id);a.multa+=valorMulta;localStorage.setItem("meus_alunos",JSON.stringify(alunos));desenhar();}
+function marcarPago(id){let a=alunos.find(x=>x.id===id);a.pago=!a.pago;localStorage.setItem("meus_alunos",JSON.stringify(alunos));desenhar();}
+function apagar(id){if(confirm("Apagar?")){alunos=alunos.filter(x=>x.id!==id);localStorage.setItem("meus_alunos",JSON.stringify(alunos));desenhar();}}
+function desenhar(){let tabela=document.getElementById("tabela");tabela.innerHTML="";let totalGeral=0,totalPago=0;alunos.forEach(aluno=>{let totalAluno=valorBase+aluno.multa;totalGeral+=totalAluno;if(aluno.pago)totalPago+=totalAluno;tabela.innerHTML+=`<tr><td>${aluno.nome} ${aluno.pago?"✅":""}</td><td>R$ ${valorBase.toFixed(2)}</td><td>R$ ${aluno.multa.toFixed(2)}</td><td><b>R$ ${totalAluno.toFixed(2)}</b></td><td><button class="btn-multa" onclick="porMulta(${aluno.id})">Multa</button> <button class="btn-pago" onclick="marcarPago(${aluno.id})">${aluno.pago?"Desfazer":"Pago"}</button> <button class="btn-del" onclick="apagar(${aluno.id})">X</button></td></tr>`});document.getElementById("txtTotal").innerText="R$ "+totalGeral.toFixed(2);document.getElementById("txtPago").innerText="R$ "+totalPago.toFixed(2);document.getElementById("txtFalta").innerText="R$ "+(totalGeral-totalPago).toFixed(2);}desenhar();
+</script>
+</body>
+</html>
